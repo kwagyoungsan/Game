@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class MovingObject : MonoBehaviour
 {
+
+    static public MovingObject instance;
+    public string currentMapName; // tranferMapName 스크립트에 있는 transferMapName 변수 값을 저장
+
     private BoxCollider2D boxCollider;
     public LayerMask layerMask;
 
@@ -26,8 +30,19 @@ public class MovingObject : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        animator = GetComponent<Animator>();
-        boxCollider = GetComponent<BoxCollider2D>();
+        if(instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(this.gameObject); // 객체가 파괴되지 않고 저장
+            animator = GetComponent<Animator>();
+            boxCollider = GetComponent<BoxCollider2D>();
+        }
+        else
+        {
+            Destroy(this.gameObject);
+        }
+        
+
     }
 
     IEnumerator MoveCoroutine()
