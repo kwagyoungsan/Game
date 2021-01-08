@@ -4,121 +4,52 @@ using UnityEngine;
 
 public class MovingObject : MonoBehaviour
 {
-
-    static public MovingObject instance;
-    public string currentMapName; // tranferMapName 스크립트에 있는 transferMapName 변수 값을 저장
-
-    private BoxCollider2D boxCollider;
+    public BoxCollider2D boxCollider;
     public LayerMask layerMask;
 
     public float speed;
-
-    private Vector3 vector;
-
-    public float runSpeed;
-    private float ApplyrunSpeed;
-    private bool applyRunFlag;
-
+    protected Vector3 vector;
     public int walkCount;
-    private int currentWalkcount;
+    protected int currentWalkcount;
+    public Animator animator;
 
-    private bool canMove = true;
-
-
-    private Animator animator;
-
-    // Start is called before the first frame update
-    void Start()
+    protected void Move(string _dir)
     {
-        if(instance == null)
-        {
-            instance = this;
-            DontDestroyOnLoad(this.gameObject); // 객체가 파괴되지 않고 저장
-            animator = GetComponent<Animator>();
-            boxCollider = GetComponent<BoxCollider2D>();
-        }
-        else
-        {
-            Destroy(this.gameObject);
-        }
-        
-
+        StartCoroutine(MoveCoroutine(_dir));
     }
 
-    IEnumerator MoveCoroutine()
+    IEnumerator MoveCoroutine(string _dir)
     {
+        vector.Set(0, 0, vector.z);
 
-        while (Input.GetAxisRaw("Vertical") != 0 || Input.GetAxisRaw("Horizontal") != 0)
+        switch (_dir)
         {
-
-
-            if (Input.GetKey(KeyCode.LeftShift))
-            {
-                ApplyrunSpeed = runSpeed;
-                applyRunFlag = true;
-            }
-            else
-            {
-                ApplyrunSpeed = 0;
-                applyRunFlag = false;
-            }
-
-            vector.Set(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"), transform.position.z);
-
-            if (vector.x != 0)
-                vector.y = 0;
-
-            animator.SetFloat("DirX", vector.x);
-            animator.SetFloat("DirY", vector.y);
-
-            RaycastHit2D hit;
-
-            Vector2 Start = transform.position;
-            Vector2 End = Start + new Vector2(vector.x * speed * walkCount, vector.y * speed * walkCount);
-
-            boxCollider.enabled = false;
-            hit = Physics2D.Linecast(Start, End, layerMask);
-            boxCollider.enabled = true;
-
-            if (hit.transform != null)
+            case "UP":
+                vector.y = 1f;
                 break;
-
-            animator.SetBool("Walking", true);
-
-            while (currentWalkcount < walkCount)
-            {
-                if (vector.x != 0)
-                {
-                    transform.Translate(vector.x * (speed + ApplyrunSpeed), 0, 0);
-                }
-
-                else
-                {
-                    transform.Translate(0, vector.y * (speed + ApplyrunSpeed), 0);
-                }
-                if (applyRunFlag)
-                    currentWalkcount++;
-                currentWalkcount++;
-                yield return new WaitForSeconds(0.01f);
-            }
-            currentWalkcount = 0;
-
+            case "DOWN":
+                vector.y = -1f;
+                break; 
+            case "LEFT":
+                vector.x = -1f;
+                break;
+            case "RIGHT":
+                vector.x = 1f;
+                break;
         }
-        animator.SetBool("Walking", false);
-        canMove = true;
-    }
+        animator.SetFloat("DirX", vector.x);
+        animator.SetFloat("DirY", vector.y);
+        animator.SetBool("Walking", true);
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (canMove)
+        while (currentWalkcount < walkCount)
         {
-            if (Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0)
-            {
-                canMove = false;
-                StartCoroutine(MoveCoroutine());
-            }
+            transform.Translate(vector.x * speed, vector.y * speed, 0);
+            currentWalkcount++;
+            yield return new WaitForSeconds(0.01f);
         }
-
+        currentWalkcount = 0;
+        animator.SetBool("Walking", false);
+      
     }
 }
+
